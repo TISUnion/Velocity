@@ -19,6 +19,9 @@ package com.velocitypowered.proxy.protocol.packet.uuidrewrite;
 
 import java.util.UUID;
 
+/**
+ * [fallen's fork] player uuid rewrite - packet interface.
+ */
 public interface PacketToRewriteEntityUuid {
 
   boolean isPlayer();

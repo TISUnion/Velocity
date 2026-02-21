@@ -183,9 +183,9 @@ public class UuidMappingDatabase {
       if (
           resultSet.next()
           && Objects.equals(resultSet.getString("player_name"), playerName)
-          && Objects.equals(resultSet.getString("offline_uuid"), offlineUuid.toString())
-          && Objects.equals(resultSet.getString("online_uuid"), onlineUuid.toString())
-          && Arrays.equals(resultSet.getBytes("online_profile"), onlineProfileBuf)
+            && Objects.equals(resultSet.getString("offline_uuid"), offlineUuid.toString())
+            && Objects.equals(resultSet.getString("online_uuid"), onlineUuid.toString())
+            && Arrays.equals(resultSet.getBytes("online_profile"), onlineProfileBuf)
       ) {
         // no changes to this player
         if (now / 1000 - resultSet.getBigDecimal("updated_at").longValue() < 60 * 60) {  // 1h cooldown

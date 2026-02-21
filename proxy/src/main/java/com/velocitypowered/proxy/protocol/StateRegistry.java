@@ -120,9 +120,9 @@ import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleSubtitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpawnEntityS2CPacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpawnPlayerS2CPacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpectatorTeleportC2SPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnPlayerPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrServerboundSpectatorTeleportPacket;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.netty.util.collection.IntObjectHashMap;
 import io.netty.util.collection.IntObjectMap;
@@ -810,17 +810,17 @@ public enum StateRegistry {
       // [fallen's fork] player uuid rewrite - entity packet
       // see also: https://github.com/derklaro/mc-protocol
       // e.g., https://github.com/derklaro/mc-protocol/blob/1.21.8/readme.md
-      clientbound.register(UrSpawnPlayerS2CPacket.class, UrSpawnPlayerS2CPacket::new,
+      clientbound.register(UrClientboundSpawnPlayerPacket.class, UrClientboundSpawnPlayerPacket::new,
               map(0x0C, MINECRAFT_1_8, false),
               map(0x05, MINECRAFT_1_9, false),
               map(0x04, MINECRAFT_1_16, false),
               map(0x02, MINECRAFT_1_19, false),
               map(0x03, MINECRAFT_1_19_4, false),
               map(-1, MINECRAFT_1_20_2, false));
-      clientbound.register(UrSpawnEntityS2CPacket.class, UrSpawnEntityS2CPacket::new,
+      clientbound.register(UrClientboundSpawnEntityPacket.class, UrClientboundSpawnEntityPacket::new,
               // the "Add Entity" S2C packet
               map(0x01, MINECRAFT_1_20_2, false));
-      serverbound.register(UrSpectatorTeleportC2SPacket.class, UrSpectatorTeleportC2SPacket::new,
+      serverbound.register(UrServerboundSpectatorTeleportPacket.class, UrServerboundSpectatorTeleportPacket::new,
               // the "Teleport To Entity" C2S packet
               map(0x18, MINECRAFT_1_8, false),
               map(0x1B, MINECRAFT_1_9, false),

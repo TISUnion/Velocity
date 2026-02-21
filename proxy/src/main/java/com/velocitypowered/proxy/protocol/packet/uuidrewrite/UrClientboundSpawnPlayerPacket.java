@@ -22,24 +22,31 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-
 import java.util.UUID;
 
 /**
- * [fallen's fork] player uuid rewrite - entity packet
+ * [fallen's fork] player uuid rewrite - S2C entity packet.
+ * used in mc < 1.20.2
  */
-public class UrSpectatorTeleportC2SPacket implements MinecraftPacket, PacketToRewriteEntityUuid {
+public class UrClientboundSpawnPlayerPacket implements MinecraftPacket, PacketToRewriteEntityUuid {
 
-  private UUID targetUuid;
+  private int entityId;
+  private UUID entityUuid;
+  private byte[] remainingBuf;
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    this.targetUuid = ProtocolUtils.readUuid(buf);
+    this.entityId = ProtocolUtils.readVarInt(buf);
+    this.entityUuid = ProtocolUtils.readUuid(buf);
+    this.remainingBuf = new byte[buf.readableBytes()];
+    buf.readBytes(this.remainingBuf);
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-    ProtocolUtils.writeUuid(buf, this.targetUuid);
+    ProtocolUtils.writeVarInt(buf, this.entityId);
+    ProtocolUtils.writeUuid(buf, this.entityUuid);
+    buf.writeBytes(this.remainingBuf);
   }
 
   @Override
@@ -49,16 +56,16 @@ public class UrSpectatorTeleportC2SPacket implements MinecraftPacket, PacketToRe
 
   @Override
   public boolean isPlayer() {
-    return true;  // assuming yes
+    return true;
   }
 
   @Override
   public UUID getEntityUuid() {
-    return this.targetUuid;
+    return this.entityUuid;
   }
 
   @Override
   public void setEntityUuid(UUID entityUuid) {
-    this.targetUuid = entityUuid;
+    this.entityUuid = entityUuid;
   }
 }

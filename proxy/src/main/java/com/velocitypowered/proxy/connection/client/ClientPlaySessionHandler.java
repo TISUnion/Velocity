@@ -70,7 +70,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerChatP
 import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import com.velocitypowered.proxy.protocol.packet.config.FinishedUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.title.GenericTitlePacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpectatorTeleportC2SPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrServerboundSpectatorTeleportPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.util.CharacterUtil;
 import com.velocitypowered.proxy.util.except.QuietRuntimeException;
@@ -400,7 +400,7 @@ public class ClientPlaySessionHandler implements MinecraftSessionHandler {
 
   // [fallen's fork] player uuid rewrite - entity packet
   @Override
-  public boolean handle(UrSpectatorTeleportC2SPacket packet) {
+  public boolean handle(UrServerboundSpectatorTeleportPacket packet) {
     EntityPacketUuidRewriter.rewriteC2S(server, player, packet);
     return false;
   }

@@ -85,9 +85,9 @@ import com.velocitypowered.proxy.protocol.packet.title.TitleClearPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleSubtitlePacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTextPacket;
 import com.velocitypowered.proxy.protocol.packet.title.TitleTimesPacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpawnEntityS2CPacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpawnPlayerS2CPacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpectatorTeleportC2SPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnPlayerPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrServerboundSpectatorTeleportPacket;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -320,15 +320,15 @@ public interface MinecraftSessionHandler {
   }
 
   // [fallen's fork] player uuid rewrite - entity packet
-  default boolean handle(UrSpawnPlayerS2CPacket packet) {
+  default boolean handle(UrClientboundSpawnPlayerPacket packet) {
     return false;
   }
 
-  default boolean handle(UrSpawnEntityS2CPacket packet) {
+  default boolean handle(UrClientboundSpawnEntityPacket packet) {
     return false;
   }
 
-  default boolean handle(UrSpectatorTeleportC2SPacket packet) {
+  default boolean handle(UrServerboundSpectatorTeleportPacket packet) {
     return false;
   }
   // [fallen's fork] ends

@@ -68,8 +68,8 @@ import com.velocitypowered.proxy.protocol.packet.TransferPacket;
 import com.velocitypowered.proxy.protocol.packet.UpsertPlayerInfoPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpawnEntityS2CPacket;
-import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrSpawnPlayerS2CPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnEntityPacket;
+import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnPlayerPacket;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.uuidrewrite.EntityPacketUuidRewriter;
 import com.velocitypowered.proxy.uuidrewrite.TabListUuidRewriter;
@@ -369,13 +369,13 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   // [fallen's fork] player uuid rewrite - entity packet
   @Override
-  public boolean handle(UrSpawnPlayerS2CPacket packet) {
+  public boolean handle(UrClientboundSpawnPlayerPacket packet) {
     EntityPacketUuidRewriter.rewriteS2C(server, serverConn.getPlayer(), packet);
     return false;
   }
 
   @Override
-  public boolean handle(UrSpawnEntityS2CPacket packet) {
+  public boolean handle(UrClientboundSpawnEntityPacket packet) {
     EntityPacketUuidRewriter.rewriteS2C(server, serverConn.getPlayer(), packet);
     return false;
   }

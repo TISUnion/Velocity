@@ -22,31 +22,64 @@ import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-
 import java.util.UUID;
 
 /**
- * [fallen's fork] player uuid rewrite - entity packet
- * used in mc < 1.20.2
+ * [fallen's fork] player uuid rewrite - S2C entity packet.
+ * Used in mc >= 1.20.2.
+ * For mc < 1.20.2, {@link UrClientboundSpawnPlayerPacket} does the thing
  */
-public class UrSpawnPlayerS2CPacket implements MinecraftPacket, PacketToRewriteEntityUuid {
+public class UrClientboundSpawnEntityPacket implements MinecraftPacket, PacketToRewriteEntityUuid {
 
   private int entityId;
   private UUID entityUuid;
+  private int entityType;
   private byte[] remainingBuf;
+
+  private boolean isPlayer;
+
+  private record EntityTypeId(ProtocolVersion protocolVersion, int id) {}
+
+  // https://wiki.vg/Entity_metadata#Mobs
+  // https://github.com/Fallen-Breath/mc-registry-dump/tree/master/output, data["entity_type"]["minecraft:player"]
+  // https://github.com/PrismarineJS/minecraft-data/blob/master/data/pc/1.21.4/entities.json
+  private static final EntityTypeId[] PLAYER_ENTITY_TYPE_ID_MAPPINGS = new EntityTypeId[]{
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_11, 155),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_9, 151),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_6, 149),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_5, 148),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_4, 147),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_2, 148),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_20_5, 128),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_20_3, 124),
+      new EntityTypeId(ProtocolVersion.MINECRAFT_1_20_2, 122)
+  };
+
+  private static int getPlayerEntityTypeId(ProtocolVersion version) {
+    for (EntityTypeId m : PLAYER_ENTITY_TYPE_ID_MAPPINGS) {
+      if (version.noLessThan(m.protocolVersion())) {
+        return m.id();
+      }
+    }
+    throw new IllegalArgumentException("Unsupported protocol version: " + version);
+  }
 
   @Override
   public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     this.entityId = ProtocolUtils.readVarInt(buf);
     this.entityUuid = ProtocolUtils.readUuid(buf);
+    this.entityType = ProtocolUtils.readVarInt(buf);
     this.remainingBuf = new byte[buf.readableBytes()];
     buf.readBytes(this.remainingBuf);
+
+    this.isPlayer = this.entityType == getPlayerEntityTypeId(protocolVersion);
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
     ProtocolUtils.writeVarInt(buf, this.entityId);
     ProtocolUtils.writeUuid(buf, this.entityUuid);
+    ProtocolUtils.writeVarInt(buf, this.entityType);
     buf.writeBytes(this.remainingBuf);
   }
 
@@ -57,7 +90,7 @@ public class UrSpawnPlayerS2CPacket implements MinecraftPacket, PacketToRewriteE
 
   @Override
   public boolean isPlayer() {
-    return true;
+    return this.isPlayer;
   }
 
   @Override

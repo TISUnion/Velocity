@@ -46,7 +46,7 @@ public class TabListUuidRewriter {
   }
 
   /**
-   * [fallen's fork] player uuid rewrite
+   * [fallen's fork] player uuid rewrite.
    * send the missing player tab-list removal packets to other players in the mc server
    * see bungeecord net.md_5.bungee.connection.UpstreamBridge#disconnected
    */
