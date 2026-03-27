@@ -126,11 +126,6 @@ public final class ServerPreConnectEvent implements
       return server != null;
     }
 
-    /**
-     * Returns the server the player will be connected to if the result is allowed.
-     *
-     * @return the server to connect to, or an empty Optional if the connection is denied
-     */
     public Optional<RegisteredServer> getServer() {
       return Optional.ofNullable(server);
     }
@@ -148,7 +143,7 @@ public final class ServerPreConnectEvent implements
      * is used, then {@link ConnectionRequestBuilder#connect()}'s result will have the status
      * {@link Status#CONNECTION_CANCELLED}.
      *
-     * @return a result to deny conneections
+     * @return a result to deny connections
      */
     public static ServerResult denied() {
       return DENIED;
