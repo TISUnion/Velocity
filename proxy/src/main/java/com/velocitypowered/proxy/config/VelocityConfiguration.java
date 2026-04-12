@@ -102,6 +102,8 @@ public class VelocityConfiguration implements ProxyConfig {
   private @Nullable Favicon favicon;
   @Expose
   private boolean forceKeyAuthentication = true; // Added in 1.19
+  @Expose
+  private PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.DEFAULT;
 
   private VelocityConfiguration(Servers servers, ForcedHosts forcedHosts, Advanced advanced,
       AuthProxy authProxy,  // [fallen's fork] mojang auth proxy
@@ -124,7 +126,7 @@ public class VelocityConfiguration implements ProxyConfig {
       ForcedHosts forcedHosts, Advanced advanced, Query query, Metrics metrics,
       AuthProxy authProxy,  // [fallen's fork] mojang auth proxy
       UuidRewrite uuidRewrite,  // [fallen's fork] player uuid rewrite
-      boolean forceKeyAuthentication) {
+      boolean forceKeyAuthentication, PacketLimiterConfig packetLimiterConfig) {
     this.bind = bind;
     this.motd = motd;
     this.showMaxPlayers = showMaxPlayers;
@@ -145,6 +147,7 @@ public class VelocityConfiguration implements ProxyConfig {
     this.query = query;
     this.metrics = metrics;
     this.forceKeyAuthentication = forceKeyAuthentication;
+    this.packetLimiterConfig = packetLimiterConfig;
   }
 
   /**
@@ -504,6 +507,10 @@ public class VelocityConfiguration implements ProxyConfig {
     return advanced.isEnableReusePort();
   }
 
+  public PacketLimiterConfig getPacketLimiterConfig() {
+    return packetLimiterConfig;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -521,6 +528,7 @@ public class VelocityConfiguration implements ProxyConfig {
         .add("favicon", favicon)
         .add("enablePlayerAddressLogging", enablePlayerAddressLogging)
         .add("forceKeyAuthentication", forceKeyAuthentication)
+        .add("packetLimiterConfig", packetLimiterConfig)
         .toString();
   }
 
@@ -619,6 +627,7 @@ public class VelocityConfiguration implements ProxyConfig {
       final boolean kickExisting = config.getOrElse("kick-existing-players", false);
       final boolean enablePlayerAddressLogging = config.getOrElse(
               "enable-player-address-logging", true);
+      final PacketLimiterConfig packetLimiterConfig = PacketLimiterConfig.fromConfig(config.get("packet-limiter"));
 
       // Throw an exception if the forwarding-secret file is empty and the proxy is using a
       // forwarding mode that requires it.
@@ -648,7 +657,8 @@ public class VelocityConfiguration implements ProxyConfig {
               new Metrics(metricsConfig),
               new AuthProxy(autoProxy),  // [fallen's fork] mojang auth proxy
               new UuidRewrite(uuidRewrite),  // [fallen's fork] player uuid rewrite
-              forceKeyAuthentication
+              forceKeyAuthentication,
+              packetLimiterConfig
       );
     }
   }
@@ -1132,6 +1142,35 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public boolean isEnabled() {
       return enabled;
+    }
+  }
+
+  /**
+   * Configuration for packet limiting.
+   *
+   * @param interval the interval in seconds to measure packets over
+   * @param pps      the maximum number of packets per second allowed
+   * @param bytes    the maximum number of bytes per second allowed
+   */
+  public record PacketLimiterConfig(int interval, int pps, int bytes) {
+    public static PacketLimiterConfig DEFAULT = new PacketLimiterConfig(7, 500, -1);
+
+    /**
+     * returns a PacketLimiterConfig from a config section, or the default if the section is null.
+     *
+     * @param config the configuration object to parse
+     * @return the packet limiter config, or the default if {@code config} is null
+     */
+    public static PacketLimiterConfig fromConfig(CommentedConfig config) {
+      if (config != null) {
+        return new PacketLimiterConfig(
+            config.getIntOrElse("interval", DEFAULT.interval()),
+            config.getIntOrElse("packets-per-second", DEFAULT.pps()),
+            config.getIntOrElse("bytes-per-second", DEFAULT.bytes())
+        );
+      } else {
+        return DEFAULT;
+      }
     }
   }
 }
