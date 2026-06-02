@@ -194,6 +194,7 @@ enabled = false
 type = "http"
 hostname = "127.0.0.1"
 port = 1081
+requestTimeoutMs = 5000
 
 # [fallen's fork] player uuid rewrite
 # See readme for more information

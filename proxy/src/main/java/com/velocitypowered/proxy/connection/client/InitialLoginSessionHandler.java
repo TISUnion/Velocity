@@ -50,6 +50,7 @@ import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -209,90 +210,93 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       if (server.getConfiguration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
-
-      final HttpRequest httpRequest = HttpRequest.newBuilder()
-              .setHeader("User-Agent",
-                      server.getVersion().getName() + "/" + server.getVersion().getVersion())
-              .uri(URI.create(url))
-              .build();
-      //noinspection resource
+      final String finalUrl = url;
       final HttpClient httpClient = server.createHttpClient();
 
       // [fallen's fork] mojang auth proxy: make the request progress reuseable
       @SuppressWarnings("unchecked") final BiConsumer<HttpClient, Boolean>[] requester = new BiConsumer[1];
-      requester[0] = (client, retryable) ->
-        client.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-          .whenCompleteAsync((response, throwable) -> {
-            if (mcConnection.isClosed()) {
-              // The player disconnected after we authenticated them.
-              return;
-            }
+      requester[0] = (client, isProxyMode) -> {
+        HttpRequest.Builder httpRequestBuilder = HttpRequest.newBuilder()
+                .setHeader("User-Agent", server.getVersion().getName() + "/" + server.getVersion().getVersion())
+                .uri(URI.create(finalUrl));
+        if (isProxyMode) {
+          httpRequestBuilder.timeout(Duration.ofMillis(server.getConfiguration().getAuthProxyRequestTimeoutMs()));
+        }
+        final HttpRequest httpRequest = httpRequestBuilder.build();
 
-            if (throwable != null) {
-              // [fallen's fork] mojang auth proxy: fail-able with proxy mode
-              if (retryable) {
-                logger.error("Unable to authenticate player (proxied), try without", throwable);
-                requester[0].accept(httpClient, false);
+        client.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+            .whenCompleteAsync((response, throwable) -> {
+              if (mcConnection.isClosed()) {
+                // The player disconnected after we authenticated them.
                 return;
               }
 
-              logger.error("Unable to authenticate player", throwable);
-              inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-              return;
-            }
-
-            // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
-            // is enabled.
-            try {
-              mcConnection.enableEncryption(decryptedSharedSecret);
-            } catch (GeneralSecurityException e) {
-              logger.error("Unable to enable encryption for connection", e);
-              // At this point, the connection is encrypted, but something's wrong on our side and
-              // we can't do anything about it.
-              mcConnection.close(true);
-              return;
-            }
-
-            if (response.statusCode() == 200) {
-              final GameProfile profile = GENERAL_GSON.fromJson(response.body(),
-                  GameProfile.class);
-              // Not so fast, now we verify the public key for 1.19.1+
-              if (inbound.getIdentifiedKey() != null
-                  && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
-                  && inbound.getIdentifiedKey() instanceof final IdentifiedKeyImpl key) {
-                if (!key.internalAddHolder(profile.getId())) {
-                  inbound.disconnect(
-                      Component.translatable("multiplayer.disconnect.invalid_public_key"));
+              if (throwable != null) {
+                // [fallen's fork] mojang auth proxy: fail-able with proxy mode
+                if (isProxyMode) {
+                  logger.error("Unable to authenticate player (proxied), try without", throwable);
+                  requester[0].accept(httpClient, false);
+                  return;
                 }
+
+                logger.error("Unable to authenticate player", throwable);
+                inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+                return;
               }
-              // All went well, initialize the session.
-              mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
-                  new AuthSessionHandler(server, inbound, profile, true, serverId));
-            } else if (response.statusCode() == 204) {
-              // Apparently an offline-mode user logged onto this online-mode proxy.
-              inbound.disconnect(
-                  Component.translatable("velocity.error.online-mode-only", NamedTextColor.RED));
-            } else if (retryable) {
-              // [fallen's fork] mojang auth proxy: fail-able with proxy mode
-              logger.error("Error authenticating with proxy, http status code {}, try without", response.statusCode());
-              requester[0].accept(httpClient, false);
-            } else {
-              // Something else went wrong
-              logger.error(
-                  "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
-                  response.statusCode(), login.getUsername(), playerIp);
-              inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-            }
-          }, mcConnection.eventLoop())
-          .thenRun(() -> {
-            try {
-              httpClient.close();
-            } catch (Exception e) {
-              // In Java 21, the HttpClient does not throw any Exception
-              // when trying to clean its resources, so this should not happen
-              logger.error("An unknown error occurred while trying to close an HttpClient", e);
-            }
-          });
+
+              // Go ahead and enable encryption. Once the client sends EncryptionResponse, encryption
+              // is enabled.
+              try {
+                mcConnection.enableEncryption(decryptedSharedSecret);
+              } catch (GeneralSecurityException e) {
+                logger.error("Unable to enable encryption for connection", e);
+                // At this point, the connection is encrypted, but something's wrong on our side and
+                // we can't do anything about it.
+                mcConnection.close(true);
+                return;
+              }
+
+              if (response.statusCode() == 200) {
+                final GameProfile profile = GENERAL_GSON.fromJson(response.body(),
+                    GameProfile.class);
+                // Not so fast, now we verify the public key for 1.19.1+
+                if (inbound.getIdentifiedKey() != null
+                    && inbound.getIdentifiedKey().getKeyRevision() == IdentifiedKey.Revision.LINKED_V2
+                    && inbound.getIdentifiedKey() instanceof final IdentifiedKeyImpl key) {
+                  if (!key.internalAddHolder(profile.getId())) {
+                    inbound.disconnect(
+                        Component.translatable("multiplayer.disconnect.invalid_public_key"));
+                  }
+                }
+                // All went well, initialize the session.
+                mcConnection.setActiveSessionHandler(StateRegistry.LOGIN,
+                    new AuthSessionHandler(server, inbound, profile, true, serverId));
+              } else if (response.statusCode() == 204) {
+                // Apparently an offline-mode user logged onto this online-mode proxy.
+                inbound.disconnect(
+                    Component.translatable("velocity.error.online-mode-only", NamedTextColor.RED));
+              } else if (isProxyMode) {
+                // [fallen's fork] mojang auth proxy: fail-able with proxy mode
+                logger.error("Error authenticating with proxy, http status code {}, try without", response.statusCode());
+                requester[0].accept(httpClient, false);
+              } else {
+                // Something else went wrong
+                logger.error(
+                    "Got an unexpected error code {} whilst contacting Mojang to log in {} ({})",
+                    response.statusCode(), login.getUsername(), playerIp);
+                inbound.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
+              }
+            }, mcConnection.eventLoop())
+            .thenRun(() -> {
+              try {
+                httpClient.close();
+              } catch (Exception e) {
+                // In Java 21, the HttpClient does not throw any Exception
+                // when trying to clean its resources, so this should not happen
+                logger.error("An unknown error occurred while trying to close an HttpClient", e);
+              }
+            });
+      };
 
       // [fallen's fork] mojang auth proxy starts
       final HttpClient proxiedHttpClient = server.createProxiedHttpClient();

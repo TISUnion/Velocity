@@ -474,6 +474,10 @@ public class VelocityConfiguration implements ProxyConfig {
   public int getAuthProxyPort() {
     return authProxy.getPort();
   }
+
+  public int getAuthProxyRequestTimeoutMs() {
+    return authProxy.getRequestTimeoutMs();
+  }
   // [fallen's fork] mojang auth proxy ends
 
   // [fallen's fork] player uuid rewrite starts
@@ -1007,6 +1011,8 @@ public class VelocityConfiguration implements ProxyConfig {
     private String hostname = "127.0.0.1";
     @Expose
     private int port = 1081;
+    @Expose
+    private int requestTimeoutMs = 5000;
 
     public AuthProxy(CommentedConfig config) {
       if (config != null) {
@@ -1014,6 +1020,7 @@ public class VelocityConfiguration implements ProxyConfig {
         this.type = config.getOrElse("type", "http");
         this.hostname = config.getOrElse("hostname", "127.0.0.1");
         this.port = config.getIntOrElse("port", 1081);
+        this.requestTimeoutMs = config.getIntOrElse("requestTimeoutMs", 5000);
       }
     }
 
@@ -1031,6 +1038,10 @@ public class VelocityConfiguration implements ProxyConfig {
 
     public int getPort() {
       return port;
+    }
+
+    public int getRequestTimeoutMs() {
+      return requestTimeoutMs;
     }
   }
 
