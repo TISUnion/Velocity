@@ -70,6 +70,7 @@ import com.velocitypowered.proxy.protocol.packet.chat.ComponentHolder;
 import com.velocitypowered.proxy.protocol.packet.config.StartUpdatePacket;
 import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnEntityPacket;
 import com.velocitypowered.proxy.protocol.packet.uuidrewrite.UrClientboundSpawnPlayerPacket;
+import com.velocitypowered.proxy.protocol.util.DeferredByteBufHolder;
 import com.velocitypowered.proxy.protocol.util.PluginMessageUtil;
 import com.velocitypowered.proxy.uuidrewrite.EntityPacketUuidRewriter;
 import com.velocitypowered.proxy.uuidrewrite.TabListUuidRewriter;
@@ -95,6 +96,7 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
       Boolean.getBoolean("velocity.log-server-backpressure");
   private static final int MAXIMUM_PACKETS_TO_FLUSH =
       Integer.getInteger("velocity.max-packets-per-flush", 8192);
+  private static final int LARGE_PACKET_THRESHOLD = 1024 * 128;
 
   private final VelocityServer server;
   private final VelocityServerConnection serverConn;
@@ -482,8 +484,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
     if (packet instanceof PluginMessagePacket pluginMessage) {
       pluginMessage.retain();
     }
+    boolean huge = packet instanceof DeferredByteBufHolder def && def.content().readableBytes() > LARGE_PACKET_THRESHOLD;
     playerConnection.delayedWrite(packet);
-    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+    if (huge || ++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
       playerConnection.flush();
       packetsFlushed = 0;
     }
@@ -491,8 +494,9 @@ public class BackendPlaySessionHandler implements MinecraftSessionHandler {
 
   @Override
   public void handleUnknown(ByteBuf buf) {
+    boolean huge = buf.readableBytes() > LARGE_PACKET_THRESHOLD;
     playerConnection.delayedWrite(buf.retain());
-    if (++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
+    if (huge || ++packetsFlushed >= MAXIMUM_PACKETS_TO_FLUSH) {
       playerConnection.flush();
       packetsFlushed = 0;
     }
