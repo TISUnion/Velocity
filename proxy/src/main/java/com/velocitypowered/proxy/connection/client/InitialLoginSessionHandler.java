@@ -210,7 +210,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       if (server.getConfiguration().shouldPreventClientProxyConnections()) {
         url += "&ip=" + urlFormParameterEscaper().escape(playerIp);
       }
-      final String finalUrl = url;
+      final URI finalUri = URI.create(url);
       final HttpClient httpClient = server.createHttpClient();
 
       // [fallen's fork] mojang auth proxy: make the request progress reuseable
@@ -218,7 +218,7 @@ public class InitialLoginSessionHandler implements MinecraftSessionHandler {
       requester[0] = (client, isProxyMode) -> {
         HttpRequest.Builder httpRequestBuilder = HttpRequest.newBuilder()
                 .setHeader("User-Agent", server.getVersion().getName() + "/" + server.getVersion().getVersion())
-                .uri(URI.create(finalUrl));
+                .uri(finalUri);
         if (isProxyMode) {
           httpRequestBuilder.timeout(Duration.ofMillis(server.getConfiguration().getAuthProxyRequestTimeoutMs()));
         }
