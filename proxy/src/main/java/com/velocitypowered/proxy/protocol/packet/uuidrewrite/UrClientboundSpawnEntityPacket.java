@@ -44,6 +44,7 @@ public class UrClientboundSpawnEntityPacket implements MinecraftPacket, PacketTo
   // https://github.com/Fallen-Breath/mc-registry-dump/tree/master/output, data["entity_type"]["minecraft:player"]
   // https://github.com/PrismarineJS/minecraft-data/blob/master/data/pc/1.21.4/entities.json
   private static final EntityTypeId[] PLAYER_ENTITY_TYPE_ID_MAPPINGS = new EntityTypeId[]{
+      new EntityTypeId(ProtocolVersion.MINECRAFT_26_2, 156),
       new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_11, 155),
       new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_9, 151),
       new EntityTypeId(ProtocolVersion.MINECRAFT_1_21_6, 149),
