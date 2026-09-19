@@ -23,6 +23,7 @@ import com.velocitypowered.proxy.protocol.packet.BossBarPacket;
 import com.velocitypowered.proxy.protocol.packet.BundleDelimiterPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientSettingsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundCookieRequestPacket;
+import com.velocitypowered.proxy.protocol.packet.ClientboundPostEffectsPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundSoundEntityPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStopSoundPacket;
 import com.velocitypowered.proxy.protocol.packet.ClientboundStoreCookiePacket;
@@ -53,6 +54,7 @@ import com.velocitypowered.proxy.protocol.packet.ServerLoginPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerLoginSuccessPacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCookieResponsePacket;
 import com.velocitypowered.proxy.protocol.packet.ServerboundCustomClickActionPacket;
+import com.velocitypowered.proxy.protocol.packet.ServerboundPlayerLoadedPacket;
 import com.velocitypowered.proxy.protocol.packet.SetCompressionPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusPingPacket;
 import com.velocitypowered.proxy.protocol.packet.StatusRequestPacket;
@@ -200,6 +202,10 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(RespawnPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ServerboundPlayerLoadedPacket packet) {
     return false;
   }
 
@@ -414,6 +420,10 @@ public interface MinecraftSessionHandler {
   }
 
   default boolean handle(ClientboundStopSoundPacket packet) {
+    return false;
+  }
+
+  default boolean handle(ClientboundPostEffectsPacket packet) {
     return false;
   }
 }

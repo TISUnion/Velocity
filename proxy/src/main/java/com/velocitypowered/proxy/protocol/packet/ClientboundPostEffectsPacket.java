@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Velocity Contributors
+ * Copyright (C) 2018-2026 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,44 +15,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.title;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
+import com.velocitypowered.proxy.protocol.ProtocolUtils.Direction;
 import io.netty.buffer.ByteBuf;
-import org.jetbrains.annotations.NotNull;
+import net.kyori.adventure.key.Key;
 
-public class TitleClearPacket extends GenericTitlePacket {
+public final class ClientboundPostEffectsPacket implements MinecraftPacket {
 
-  private final ActionType action;
+  private Key[] postEffects;
 
-  public TitleClearPacket() {
-    this(ActionType.HIDE);
+  public ClientboundPostEffectsPacket() {
   }
 
-  public TitleClearPacket(ActionType action) {
-    if (action != ActionType.HIDE && action != ActionType.RESET) {
-      throw new IllegalArgumentException("TitleClearPacket only accepts the HIDE and RESET actions.");
-    }
-    this.action = action;
+  public ClientboundPostEffectsPacket(Key[] postEffects) {
+    this.postEffects = postEffects;
   }
 
   @Override
-  public @NotNull ActionType getAction() {
-    return action;
+  public void decode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    this.postEffects = ProtocolUtils.readKeyArray(buf);
   }
 
   @Override
-  public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeBoolean(this.action == ActionType.RESET);
-  }
-
-  @Override
-  public String toString() {
-    return "TitleClearPacket{"
-        + ", resetTimes=" + (this.action == ActionType.RESET)
-        + '}';
+  public void encode(ByteBuf buf, Direction direction, ProtocolVersion protocolVersion) {
+    ProtocolUtils.writeKeyArray(buf, this.postEffects);
   }
 
   @Override

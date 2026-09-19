@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Velocity Contributors
+ * Copyright (C) 2025 Velocity Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,44 +15,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.velocitypowered.proxy.protocol.packet.title;
+package com.velocitypowered.proxy.protocol.packet;
 
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.proxy.connection.MinecraftSessionHandler;
+import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.ProtocolUtils;
 import io.netty.buffer.ByteBuf;
-import org.jetbrains.annotations.NotNull;
 
-public class TitleClearPacket extends GenericTitlePacket {
+public class ServerboundPlayerLoadedPacket implements MinecraftPacket {
 
-  private final ActionType action;
+  public static final ServerboundPlayerLoadedPacket INSTANCE = new ServerboundPlayerLoadedPacket();
 
-  public TitleClearPacket() {
-    this(ActionType.HIDE);
-  }
-
-  public TitleClearPacket(ActionType action) {
-    if (action != ActionType.HIDE && action != ActionType.RESET) {
-      throw new IllegalArgumentException("TitleClearPacket only accepts the HIDE and RESET actions.");
-    }
-    this.action = action;
+  private ServerboundPlayerLoadedPacket() {
   }
 
   @Override
-  public @NotNull ActionType getAction() {
-    return action;
+  public void decode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
   }
 
   @Override
   public void encode(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
-    buf.writeBoolean(this.action == ActionType.RESET);
   }
 
   @Override
-  public String toString() {
-    return "TitleClearPacket{"
-        + ", resetTimes=" + (this.action == ActionType.RESET)
-        + '}';
+  public int decodeExpectedMaxLength(ByteBuf buf, ProtocolUtils.Direction direction, ProtocolVersion version) {
+    return 0;
   }
 
   @Override
