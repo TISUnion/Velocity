@@ -888,6 +888,7 @@ public enum StateRegistry {
           map(0x8C, MINECRAFT_26_3, false));
 
       // [fallen's fork] player uuid rewrite - entity packet
+      // [fallen's fork] need check on mc update
       // see also: https://github.com/derklaro/mc-protocol
       // e.g., https://github.com/derklaro/mc-protocol/blob/1.21.8/readme.md
       clientbound.register(UrClientboundSpawnPlayerPacket.class, UrClientboundSpawnPlayerPacket::new,
