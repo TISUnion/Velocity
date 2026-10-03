@@ -49,6 +49,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -100,7 +101,7 @@ public class VelocityConfiguration implements ProxyConfig {
   private final Metrics metrics;
   @Expose
   private boolean enablePlayerAddressLogging = true;
-  private net.kyori.adventure.text.@MonotonicNonNull Component motdAsComponent;
+  private @MonotonicNonNull Component motdAsComponent;
   private @Nullable Favicon favicon;
   @Expose
   private boolean forceKeyAuthentication = true; // Added in 1.19
@@ -299,7 +300,7 @@ public class VelocityConfiguration implements ProxyConfig {
   }
 
   @Override
-  public net.kyori.adventure.text.Component getMotd() {
+  public Component getMotd() {
     if (motdAsComponent == null) {
       motdAsComponent = MiniMessage.miniMessage().deserialize(motd);
     }

@@ -72,6 +72,7 @@ import java.security.GeneralSecurityException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -87,6 +88,7 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   private static final Logger logger = LogManager.getLogger(MinecraftConnection.class);
 
+  private final @Nullable UUID sessionId;
   private final Channel channel;
   public boolean pendingConfigurationSwitch = false;
   private SocketAddress remoteAddress;
@@ -100,15 +102,28 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
   private boolean knownDisconnect = false;
 
   /**
-   * Initializes a new {@link MinecraftConnection} instance.
+   * Initializes a new {@link MinecraftConnection} instance with no session ID.
    *
    * @param channel the channel on the connection
    * @param server  the Velocity instance
    */
   public MinecraftConnection(Channel channel, VelocityServer server) {
+    this(channel, server, null);
+  }
+
+  /**
+   * Initializes a new {@link MinecraftConnection} instance.
+   *
+   * @param channel   the channel on the connection
+   * @param server    the Velocity instance
+   * @param sessionId the proxy session id of the player this connection belongs to, or
+   *                  {@code null} if it does not belong to a player session
+   */
+  public MinecraftConnection(Channel channel, VelocityServer server, @Nullable UUID sessionId) {
     this.channel = channel;
     this.remoteAddress = channel.remoteAddress();
     this.server = server;
+    this.sessionId = sessionId;
     this.state = StateRegistry.HANDSHAKE;
 
     this.sessionHandlers = new EnumMap<>(StateRegistry.class);
@@ -320,6 +335,10 @@ public class MinecraftConnection extends ChannelInboundHandlerAdapter {
 
   public Channel getChannel() {
     return channel;
+  }
+
+  public @Nullable UUID getSessionId() {
+    return sessionId;
   }
 
   public boolean isClosed() {
